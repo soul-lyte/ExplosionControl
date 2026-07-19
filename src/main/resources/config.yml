@@ -21,16 +21,16 @@ config-version: 1
 #     just that the blocks are spared. See the notes on 'bed' and 'respawn-anchor'
 #     below for the two sources where this comes with a caveat.
 #
-#   damage-cap:             (decimal, 0.0 - 20.0)
-#     The MAXIMUM damage, in raw health points (20.0 = 10 hearts = vanilla max
-#     explosion damage), this explosion type may deal to any single living entity
-#     (players, passive mobs, hostile mobs, bosses - everything).
-#     This is a CEILING, not a flat damage value: an entity that would only take
-#     3 damage anyway (e.g. standing near the edge of the blast) still only takes
-#     3 damage. Only entities that would take MORE than damage-cap get clamped
-#     down to it. Setting damage-cap to 20.0 is therefore a complete no-op.
-#       0.0  = this explosion type can never deal any damage to anyone.
-#       20.0 = vanilla (no cap in practice, since 20 is already the vanilla max).
+#   damage-multiplier:      (decimal, 0.0 or higher)
+#     Scales the damage this explosion type deals to any single living entity
+#     (players, passive mobs, hostile mobs, bosses - everything). Applied to the
+#     raw damage before armor, so armor/resistance/absorption still reduce it
+#     exactly as they would in unmodified vanilla - just starting from a scaled
+#     amount, the same way radius-multiplier and knockback-multiplier work below.
+#       0.0 = this explosion type can never deal any damage to anyone.
+#       0.5 = half the vanilla damage.
+#       1.0 = vanilla (default).
+#       2.0 = double the vanilla damage.
 #
 #   radius-multiplier:      (decimal, 0.0 or higher)
 #     Scales the explosion's blast radius/power.
@@ -49,12 +49,12 @@ config-version: 1
 #   block-damage:           (true/false)
 #     Whether this explosion type is allowed to destroy/drop blocks.
 #     false = every other effect of the explosion still applies (damage subject to
-#     damage-cap, knockback subject to knockback-multiplier) but the terrain around
-#     it is left completely untouched.
+#     damage-multiplier, knockback subject to knockback-multiplier) but the terrain
+#     around it is left completely untouched.
 #
-# If you ever see a warning in the console about a value being "out of range" or
-# "clamped", it means a number you entered here was outside the limits above; the
-# plugin will keep running safely using the corrected value instead of crashing.
+# If you ever see a warning in the console about a value being "cannot be negative"
+# or "clamped", it means a number you entered here was outside the limits above;
+# the plugin will keep running safely using the corrected value instead of crashing.
 explosions:
 
   # ── TNT family ──────────────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ explosions:
   # Regular primed TNT (ignited by flint & steel, redstone, fire, etc).
   tnt:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -72,7 +72,7 @@ explosions:
   # on top of whatever vanilla power that produces.
   tnt-minecart:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -82,7 +82,7 @@ explosions:
   # A regular (uncharged) Creeper's self-detonation.
   creeper:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -92,7 +92,7 @@ explosions:
   # radius-multiplier below is applied on top of that vanilla doubling.
   charged-creeper:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -101,7 +101,7 @@ explosions:
   # (Its ongoing skull attacks are configured separately under 'wither-skull'.)
   wither-spawn:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -112,7 +112,7 @@ explosions:
   # skull variants - both explode on impact, the blue one just hits harder).
   wither-skull:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -120,7 +120,7 @@ explosions:
   # A large fireball specifically shot by a Ghast.
   ghast-fireball:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -131,7 +131,7 @@ explosions:
   # instance, allow Ghast fights while disabling fireball-dispenser cannons.
   fireball:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -147,7 +147,7 @@ explosions:
   # with zero additional plugin work.
   blaze-fireball:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -156,10 +156,10 @@ explosions:
   # PAPER/VANILLA LIMITATION: a Dragon Fireball does not create a real,
   # block-destroying explosion in vanilla Minecraft. On impact it instead spawns
   # a lingering area-effect cloud that damages entities over time. Because of
-  # this, only 'enabled', 'damage-cap', and 'radius-multiplier' are meaningful
-  # here:
+  # this, only 'enabled', 'damage-multiplier', and 'radius-multiplier' are
+  # meaningful here:
   #   - enabled            : prevents the impact cloud from appearing at all.
-  #   - damage-cap          : caps each tick of damage the cloud deals.
+  #   - damage-multiplier   : scales each tick of damage the cloud deals.
   #   - radius-multiplier   : scales the resulting cloud's radius (the closest
   #                           available analogue to a blast radius).
   #   - block-damage        : NOT APPLICABLE, ignored - vanilla dragon fireballs
@@ -168,7 +168,7 @@ explosions:
   #                           knockback component in vanilla.
   dragon-fireball:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -177,7 +177,7 @@ explosions:
   # player or dispenser, and the one fired by a Breeze.
   wind-charge:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -188,7 +188,7 @@ explosions:
   # re-summon the Ender Dragon).
   end-crystal:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -204,7 +204,7 @@ explosions:
   # the fact) - see the README for the full explanation.
   respawn-anchor:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -212,7 +212,7 @@ explosions:
   # A Bed exploding when a player attempts to sleep in the Nether or the End.
   bed:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true
@@ -226,7 +226,7 @@ explosions:
   # section instead of silently bypassing the plugin.
   other:
     enabled: true
-    damage-cap: 20.0
+    damage-multiplier: 1.0
     radius-multiplier: 1.0
     knockback-multiplier: 1.0
     block-damage: true

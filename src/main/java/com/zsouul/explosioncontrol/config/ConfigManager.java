@@ -81,10 +81,8 @@ public final class ConfigManager {
 
         boolean enabled = section.getBoolean("enabled", true);
 
-        double damageCap = clampRange(
-                section.getDouble("damage-cap", ExplosionSettings.MAX_DAMAGE_CAP),
-                ExplosionSettings.MIN_DAMAGE_CAP, ExplosionSettings.MAX_DAMAGE_CAP,
-                category, "damage-cap");
+        double damageMultiplier = clampMinZero(
+                section.getDouble("damage-multiplier", 1.0D), category, "damage-multiplier");
 
         double radiusMultiplier = clampMinZero(
                 section.getDouble("radius-multiplier", 1.0D), category, "radius-multiplier");
@@ -94,18 +92,7 @@ public final class ConfigManager {
 
         boolean blockDamage = section.getBoolean("block-damage", true);
 
-        return new ExplosionSettings(enabled, damageCap, radiusMultiplier, knockbackMultiplier, blockDamage);
-    }
-
-    private double clampRange(double value, double min, double max, ExplosionCategory category, String field) {
-        if (value < min || value > max) {
-            double clamped = Math.max(min, Math.min(max, value));
-            logger.warning(String.format(Locale.ROOT,
-                    "explosions.%s.%s = %.2f is outside the valid range [%.1f, %.1f]; clamped to %.2f.",
-                    category.key(), field, value, min, max, clamped));
-            return clamped;
-        }
-        return value;
+        return new ExplosionSettings(enabled, damageMultiplier, radiusMultiplier, knockbackMultiplier, blockDamage);
     }
 
     private double clampMinZero(double value, ExplosionCategory category, String field) {

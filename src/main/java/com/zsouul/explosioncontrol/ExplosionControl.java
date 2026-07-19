@@ -21,7 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * Entry point for ExplosionControl.
  * <p>
  * Gives server administrators independent, hot-reloadable control over every explosion source
- * in Minecraft 1.21.11 — {@code enabled}, {@code damage-cap}, {@code radius-multiplier},
+ * in Minecraft 1.21.11 — {@code enabled}, {@code damage-multiplier}, {@code radius-multiplier},
  * {@code knockback-multiplier}, and {@code block-damage} — via {@code config.yml}.
  * <p>
  * See the {@code listener} package for how each explosion source is hooked, and
@@ -78,7 +78,7 @@ public final class ExplosionControl extends JavaPlugin {
         pluginManager.registerEvents(new BedExplosionGuard(configManager), this);
         pluginManager.registerEvents(new RespawnAnchorExplosionGuard(configManager), this);
 
-        // Shared damage-cap / knockback-multiplier enforcement for every source above.
+        // Shared damage-multiplier / knockback-multiplier enforcement for every source above.
         pluginManager.registerEvents(new ExplosionDamageListener(configManager, knockbackCache, originRegistry), this);
         pluginManager.registerEvents(new ExplosionKnockbackListener(knockbackCache), this);
 

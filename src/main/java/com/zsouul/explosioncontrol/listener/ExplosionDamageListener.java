@@ -6,7 +6,6 @@ import com.zsouul.explosioncontrol.config.ConfigManager;
 import com.zsouul.explosioncontrol.config.ExplosionSettings;
 import com.zsouul.explosioncontrol.model.ExplosionCategory;
 import com.zsouul.explosioncontrol.resolver.ExplosionSourceResolver;
-import com.zsouul.explosioncontrol.util.DamageCapApplier;
 import org.bukkit.Location;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
@@ -18,14 +17,16 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import java.util.Optional;
 
 /**
- * Enforces {@code damage-cap} for every {@link org.bukkit.entity.LivingEntity} hit by an
- * explosion, and resolves the responsible {@link ExplosionCategory} so
+ * Enforces {@code damage-multiplier} for every {@link org.bukkit.entity.LivingEntity} hit by
+ * an explosion, and resolves the responsible {@link ExplosionCategory} so
  * {@link ExplosionKnockbackListener} can apply the matching {@code knockback-multiplier}
  * afterwards (see {@link PendingKnockbackCache} for why that correlation is necessary).
  * <p>
- * The actual capping is delegated to {@link DamageCapApplier}, which works from the event's
- * <em>final</em> damage (after armor/resistance/absorption) rather than the raw base damage —
- * see that class's docs for why that distinction matters.
+ * The multiplier is applied to the raw base damage, exactly the same way
+ * {@code radius-multiplier} scales {@code ExplosionPrimeEvent}'s radius and
+ * {@code knockback-multiplier} scales {@code EntityKnockbackEvent}'s vector — armor,
+ * resistance, and absorption then reduce the scaled amount exactly as they would in
+ * unmodified vanilla.
  */
 public final class ExplosionDamageListener implements Listener {
 
@@ -59,7 +60,11 @@ public final class ExplosionDamageListener implements Listener {
             return;
         }
 
-        DamageCapApplier.apply(event, settings.damageCap());
+        double multiplier = settings.damageMultiplier();
+        if (multiplier != 1.0D) {
+            double scaled = Math.max(0.0D, event.getDamage() * multiplier);
+            event.setDamage(scaled);
+        }
 
         // Hand the resolved settings off to the knockback listener for this same victim.
         knockbackCache.put(event.getEntity().getUniqueId(), settings);

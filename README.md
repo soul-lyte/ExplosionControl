@@ -15,7 +15,7 @@ categories**, each with the same five options in `config.yml`:
 | Option                  | Type            | Effect                                                              |
 |--------------------------|-----------------|----------------------------------------------------------------------|
 | `enabled`                 | `true`/`false`  | Master on/off switch — prevents the explosion as early as possible.  |
-| `damage-cap`              | `0.0` – `20.0`  | Maximum damage (health points) dealt to any single living entity. A true **ceiling**: it never raises damage, only lowers it if it would exceed the cap. |
+| `damage-multiplier`       | `≥ 0.0`         | Scales the damage dealt to any single living entity (`1.0` = vanilla, `0.0` = no damage). Applied to raw damage before armor, so armor/resistance/absorption still reduce it normally. |
 | `radius-multiplier`       | `≥ 0.0`         | Scales the blast radius/power (`1.0` = vanilla).                     |
 | `knockback-multiplier`    | `≥ 0.0`         | Scales the knockback velocity applied to caught entities.            |
 | `block-damage`            | `true`/`false`  | Whether the explosion is allowed to destroy/drop blocks.              |
@@ -95,11 +95,13 @@ block damage) as technically possible — not just the block destruction.
 | `bed`                | `PlayerBedFailEnterEvent` (pre-explosion) + `BlockExplodeEvent`     | Fully preventable — see below. |
 | `other`              | Every hook above, as a fallback branch                             | Catches any future/unrecognised explosion source so nothing is ever left unconfigurable. |
 
-`damage-cap` is enforced for **every** category above through a single shared
+`damage-multiplier` is enforced for **every** category above through a single shared
 `EntityDamageEvent` listener (for `ENTITY_EXPLOSION`/`BLOCK_EXPLOSION` causes, plus
 `DRAGON_BREATH` for the Dragon Fireball special case), which resolves the responsible
-category via `DamageSource#getCausingEntity()` for entity sources, or by reading the block
-still present at `DamageSource#getDamageLocation()` for block sources (Bed/Respawn Anchor).
+category via `DamageSource#getCausingEntity()` for entity sources, falls back to
+`ExplosionOriginRegistry` (a short-lived cache populated when the explosion was primed, for
+the rare case the source entity is already gone), and finally to reading the block still
+present at `DamageSource#getDamageLocation()` for block sources (Bed/Respawn Anchor).
 
 `knockback-multiplier` is enforced through `EntityKnockbackEvent`
 (`KnockbackCause.EXPLOSION`). Since that event does not expose which explosion caused it, the
@@ -148,8 +150,8 @@ see `PendingKnockbackCache` for the full explanation of why and how this is safe
    `DRAGON_BREATH`-cause damage over time; it never fires `ExplosionPrimeEvent` or
    `EntityExplodeEvent`, and has no knockback component. Addressed with a dedicated listener
    using the closest honest analogues available: `enabled` cancels
-   `EnderDragonFireballHitEvent` outright (no cloud ever appears), `damage-cap` clamps each
-   tick of `DRAGON_BREATH` damage, and `radius-multiplier` scales the resulting cloud's
+   `EnderDragonFireballHitEvent` outright (no cloud ever appears), `damage-multiplier` scales
+   each tick of `DRAGON_BREATH` damage, and `radius-multiplier` scales the resulting cloud's
    radius. `block-damage` and `knockback-multiplier` are intentionally ignored for this
    category and documented as such in `config.yml`, since vanilla dragon fireballs never
    destroy blocks or apply knockback in the first place — there's nothing for either option
@@ -186,6 +188,7 @@ ExplosionControl/
     ├── java/com/zsouul/explosioncontrol/
     │   ├── ExplosionControl.java          — plugin entry point, wiring
     │   ├── cache/PendingKnockbackCache.java
+    │   ├── cache/ExplosionOriginRegistry.java
     │   ├── command/ExplosionControlCommand.java
     │   ├── config/ConfigManager.java
     │   ├── config/ExplosionSettings.java
@@ -195,7 +198,7 @@ ExplosionControl/
     │       ├── ExplosionPrimeListener.java     — enabled + radius-multiplier (entity sources)
     │       ├── EntityExplodeListener.java      — block-damage (entity sources)
     │       ├── BlockExplodeListener.java       — block-damage (bed/respawn-anchor)
-    │       ├── ExplosionDamageListener.java    — damage-cap (all sources)
+    │       ├── ExplosionDamageListener.java    — damage-multiplier (all sources)
     │       ├── ExplosionKnockbackListener.java — knockback-multiplier (all sources)
     │       ├── DragonFireballListener.java     — dragon-fireball special case
     │       ├── BedExplosionGuard.java          — enabled=false pre-explosion (bed)

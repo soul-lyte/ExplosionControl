@@ -4,7 +4,6 @@ import com.destroystokyo.paper.event.entity.EnderDragonFireballHitEvent;
 import com.zsouul.explosioncontrol.config.ConfigManager;
 import com.zsouul.explosioncontrol.config.ExplosionSettings;
 import com.zsouul.explosioncontrol.model.ExplosionCategory;
-import com.zsouul.explosioncontrol.util.DamageCapApplier;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,8 +27,8 @@ import org.bukkit.event.entity.EntityDamageEvent;
  * <ul>
  *   <li>{@code enabled} — cancels {@link EnderDragonFireballHitEvent}, preventing the cloud
  *       (and therefore all resulting damage) from ever appearing.</li>
- *   <li>{@code damage-cap} — clamps every tick of {@code DRAGON_BREATH} damage the cloud
- *       deals, exactly like any other explosion source's damage cap.</li>
+ *   <li>{@code damage-multiplier} — scales every tick of {@code DRAGON_BREATH} damage the
+ *       cloud deals, exactly like any other explosion source's damage multiplier.</li>
  *   <li>{@code radius-multiplier} — scales the resulting {@link AreaEffectCloud}'s radius,
  *       the closest available analogue to an explosion's blast radius.</li>
  *   <li>{@code block-damage} and {@code knockback-multiplier} — intentionally not applicable
@@ -74,6 +73,10 @@ public final class DragonFireballListener implements Listener {
             return;
         }
 
-        DamageCapApplier.apply(event, settings.damageCap());
+        double multiplier = settings.damageMultiplier();
+        if (multiplier != 1.0D) {
+            double scaled = Math.max(0.0D, event.getDamage() * multiplier);
+            event.setDamage(scaled);
+        }
     }
 }
