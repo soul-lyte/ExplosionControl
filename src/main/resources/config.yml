@@ -1,0 +1,232 @@
+####################################################################################
+#                              ExplosionControl                                    #
+#                              Author: zSouul                                      #
+#                                                                                   #
+#  Independent, hot-reloadable control over every explosion source in Minecraft    #
+#  1.21.11. Run '/explosioncontrol reload' after editing this file to apply your   #
+#  changes without restarting the server.                                         #
+####################################################################################
+
+# Bump this if you ever hand-migrate an old config; the plugin does not currently
+# use it for automatic migration, but it's reserved for that purpose in a future
+# version so existing installs never need to delete config.yml to get new options.
+config-version: 1
+
+# Every explosion source below shares the exact same five options:
+#
+#   enabled:               (true/false)
+#     Master on/off switch for this explosion source. When false, the explosion is
+#     prevented as early as the Paper API allows for that source - in most cases
+#     this means NO damage, NO knockback, and NO block damage happen at all, not
+#     just that the blocks are spared. See the notes on 'bed' and 'respawn-anchor'
+#     below for the two sources where this comes with a caveat.
+#
+#   damage-cap:             (decimal, 0.0 - 20.0)
+#     The MAXIMUM damage, in raw health points (20.0 = 10 hearts = vanilla max
+#     explosion damage), this explosion type may deal to any single living entity
+#     (players, passive mobs, hostile mobs, bosses - everything).
+#     This is a CEILING, not a flat damage value: an entity that would only take
+#     3 damage anyway (e.g. standing near the edge of the blast) still only takes
+#     3 damage. Only entities that would take MORE than damage-cap get clamped
+#     down to it. Setting damage-cap to 20.0 is therefore a complete no-op.
+#       0.0  = this explosion type can never deal any damage to anyone.
+#       20.0 = vanilla (no cap in practice, since 20 is already the vanilla max).
+#
+#   radius-multiplier:      (decimal, 0.0 or higher)
+#     Scales the explosion's blast radius/power.
+#       0.0 = the explosion still happens (particles/sound/knockback rules still
+#             apply) but affects effectively no blocks or distant entities.
+#       0.5 = half the vanilla radius.
+#       1.0 = vanilla (default).
+#       2.0 = double the vanilla radius.
+#
+#   knockback-multiplier:   (decimal, 0.0 or higher)
+#     Scales the velocity entities are knocked back with when caught in the blast.
+#       0.0 = no knockback at all.
+#       1.0 = vanilla (default).
+#       2.0 = double the vanilla knockback.
+#
+#   block-damage:           (true/false)
+#     Whether this explosion type is allowed to destroy/drop blocks.
+#     false = every other effect of the explosion still applies (damage subject to
+#     damage-cap, knockback subject to knockback-multiplier) but the terrain around
+#     it is left completely untouched.
+#
+# If you ever see a warning in the console about a value being "out of range" or
+# "clamped", it means a number you entered here was outside the limits above; the
+# plugin will keep running safely using the corrected value instead of crashing.
+explosions:
+
+  # ── TNT family ──────────────────────────────────────────────────────────────
+
+  # Regular primed TNT (ignited by flint & steel, redstone, fire, etc).
+  tnt:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # TNT riding in a minecart. Vanilla scales this explosion's power slightly with
+  # the minecart's speed at the moment of detonation; radius-multiplier is applied
+  # on top of whatever vanilla power that produces.
+  tnt-minecart:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # ── Mobs ─────────────────────────────────────────────────────────────────────
+
+  # A regular (uncharged) Creeper's self-detonation.
+  creeper:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # A Creeper that has been struck by lightning ("charged"/"electric" Creeper).
+  # Vanilla already doubles this explosion's radius compared to a regular Creeper;
+  # radius-multiplier below is applied on top of that vanilla doubling.
+  charged-creeper:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # The single explosion a Wither triggers the moment it finishes spawning.
+  # (Its ongoing skull attacks are configured separately under 'wither-skull'.)
+  wither-spawn:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # ── Projectiles ──────────────────────────────────────────────────────────────
+
+  # A Wither's skull projectile impact (covers both the regular and blue/"charged"
+  # skull variants - both explode on impact, the blue one just hits harder).
+  wither-skull:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # A large fireball specifically shot by a Ghast.
+  ghast-fireball:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # Any other large fireball explosion NOT shot by a Ghast (for example one
+  # dispensed from a dispenser loaded with fire charges, or summoned via a
+  # command/plugin). Kept separate from 'ghast-fireball' so you can, for
+  # instance, allow Ghast fights while disabling fireball-dispenser cannons.
+  fireball:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # Small fireballs, as shot by a Blaze (or dispensed from a dispenser loaded
+  # with fire charges).
+  # PAPER/VANILLA LIMITATION: in vanilla Minecraft, a Blaze's small fireball does
+  # NOT actually explode - it only sets its target on fire. There is therefore no
+  # explosion for this plugin to intercept in normal play, and this section will
+  # not do anything on an unmodified vanilla/Paper server. It is included, fully
+  # wired up and ready to go, so that if a data pack, mod, or future Minecraft
+  # version ever makes small fireballs explosive, it is instantly configurable
+  # with zero additional plugin work.
+  blaze-fireball:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # The Ender Dragon's fireball ("dragon's breath" projectile).
+  # PAPER/VANILLA LIMITATION: a Dragon Fireball does not create a real,
+  # block-destroying explosion in vanilla Minecraft. On impact it instead spawns
+  # a lingering area-effect cloud that damages entities over time. Because of
+  # this, only 'enabled', 'damage-cap', and 'radius-multiplier' are meaningful
+  # here:
+  #   - enabled            : prevents the impact cloud from appearing at all.
+  #   - damage-cap          : caps each tick of damage the cloud deals.
+  #   - radius-multiplier   : scales the resulting cloud's radius (the closest
+  #                           available analogue to a blast radius).
+  #   - block-damage        : NOT APPLICABLE, ignored - vanilla dragon fireballs
+  #                           never destroy blocks in the first place.
+  #   - knockback-multiplier: NOT APPLICABLE, ignored - the cloud has no
+  #                           knockback component in vanilla.
+  dragon-fireball:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # A Wind Charge's impact burst - covers both the version thrown/dispensed by a
+  # player or dispenser, and the one fired by a Breeze.
+  wind-charge:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # ── Blocks ───────────────────────────────────────────────────────────────────
+
+  # An End Crystal detonating (destroyed by a player/projectile, or used to
+  # re-summon the Ender Dragon).
+  end-crystal:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # A Respawn Anchor exploding when used to set a spawn point outside the Nether.
+  # PAPER/VANILLA LIMITATION: unlike 'bed' below, Paper does not expose a
+  # dedicated pre-explosion event for Respawn Anchors. This plugin instead
+  # intercepts the player interaction that would trigger the explosion (a
+  # right-click on a charged anchor outside the Nether) to enforce 'enabled:
+  # false' as completely as possible. If some other plugin forces the anchor to
+  # explode through another means, only the block-damage option is guaranteed to
+  # still apply (damage/knockback for that edge case cannot be intercepted before
+  # the fact) - see the README for the full explanation.
+  respawn-anchor:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # A Bed exploding when a player attempts to sleep in the Nether or the End.
+  bed:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true
+
+  # ── Catch-all ────────────────────────────────────────────────────────────────
+
+  # Fallback for any explosion source that does not match one of the categories
+  # above - for example a brand-new explosive entity added in a future Minecraft
+  # version this plugin has not been updated for yet. Nothing in the game is ever
+  # left completely unconfigurable: unrecognised explosions are governed by this
+  # section instead of silently bypassing the plugin.
+  other:
+    enabled: true
+    damage-cap: 20.0
+    radius-multiplier: 1.0
+    knockback-multiplier: 1.0
+    block-damage: true

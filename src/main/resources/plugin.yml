@@ -1,0 +1,19 @@
+name: ExplosionControl
+version: '${project.version}'
+main: com.zsouul.explosioncontrol.ExplosionControl
+api-version: '1.21'
+author: zSouul
+description: Complete, per-source configuration control over every explosion type in Minecraft.
+website: https://github.com/zSouul/ExplosionControl
+
+commands:
+  explosioncontrol:
+    description: Manage the ExplosionControl plugin.
+    usage: /explosioncontrol reload
+    permission: explosioncontrol.reload
+    permission-message: You do not have permission to use this command.
+
+permissions:
+  explosioncontrol.reload:
+    description: Allows reloading ExplosionControl's config.yml without restarting the server.
+    default: op
