@@ -61,6 +61,7 @@ public final class DragonFireballListener implements Listener {
         }
     }
 
+    @SuppressWarnings("deprecation") // DRAGON_BREATH is deprecated but remains the correct DamageCause for dragon's breath damage - no replacement exists in Paper 1.21.11 API
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDragonBreathDamage(EntityDamageEvent event) {
         if (event.getCause() != EntityDamageEvent.DamageCause.DRAGON_BREATH) {

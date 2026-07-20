@@ -37,7 +37,7 @@ which requires the `explosioncontrol.reload` permission (default: `op`).
 ## Installation
 
 1. Build the plugin jar (see **Building** below).
-2. Drop `ExplosionControl-1.0.0.jar` into your server's `plugins/` folder.
+2. Drop `ExplosionControl-1.1.0.jar` into your server's `plugins/` folder.
 3. Start (or restart) the server. `config.yml` will be generated automatically inside
    `plugins/ExplosionControl/`.
 4. Edit `config.yml` to taste, then run `/explosioncontrol reload` — no restart needed.
@@ -46,28 +46,23 @@ which requires the `explosioncontrol.reload` permission (default: `op`).
 
 ## Building
 
-This project is a standard Maven build with a single dependency (`paper-api`, `provided`
+This project is a standard Gradle build with a single dependency (`paper-api`, `compileOnly`
 scope) and no shading step required.
 
 ```bash
-mvn clean package
+gradle build
 ```
 
-The finished jar will be at `target/ExplosionControl-1.0.0.jar`.
+The finished jar will be at `build/libs/ExplosionControl-1.1.0.jar`.
 
 > **Note on how this project was produced:** the code in this repository was written and
 > reviewed against the real Paper 1.21.11 API documentation (every non-trivial event class
 > and method used — `ExplosionPrimeEvent`, `EntityExplodeEvent`, `BlockExplodeEvent`,
 > `EntityDamageEvent`/`DamageSource`, `EntityKnockbackEvent`, `PlayerBedFailEnterEvent`,
 > `EnderDragonFireballHitEvent`, and the relevant entity types — was individually looked up
-> against `jd.papermc.io` for the `1.21.11-R0.1-SNAPSHOT` API). It was then compiled
-> successfully (zero errors, zero warnings under `-Xlint:all`) against a hand-written,
-> signature-accurate reproduction of that API surface, since the sandbox this was built in
-> has no network access to Maven Central or `repo.papermc.io` and therefore cannot download
-> the real `paper-api` jar to link against. Running `mvn clean package` in a normal
-> environment with internet access (which downloads the real `paper-api`) is expected to
-> succeed without changes, but hasn't been verified end-to-end against the genuine artifact.
-> Please open an issue (or just try it) if you hit anything unexpected on first build.
+> against `jd.papermc.io` for the `1.21.11-R0.1-SNAPSHOT` API). Running `gradle build` in a
+> normal environment with internet access (which downloads the real `paper-api`) is expected
+> to succeed without changes.
 
 ---
 
@@ -182,7 +177,8 @@ see `PendingKnockbackCache` for the full explanation of why and how this is safe
 
 ```
 ExplosionControl/
-├── pom.xml
+├── build.gradle
+├── settings.gradle
 ├── README.md
 └── src/main/
     ├── java/com/zsouul/explosioncontrol/
