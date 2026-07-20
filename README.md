@@ -37,7 +37,7 @@ which requires the `explosioncontrol.reload` permission (default: `op`).
 ## Installation
 
 1. Build the plugin jar (see **Building** below).
-2. Drop `ExplosionControl-1.0.3.jar` into your server's `plugins/` folder.
+2. Drop `ExplosionControl-1.1.0.jar` into your server's `plugins/` folder.
 3. Start (or restart) the server. `config.yml` will be generated automatically inside
    `plugins/ExplosionControl/`.
 4. Edit `config.yml` to taste, then run `/explosioncontrol reload` — no restart needed.
@@ -53,7 +53,7 @@ scope) and no shading step required.
 gradle build
 ```
 
-The finished jar will be at `build/libs/ExplosionControl-1.0.3.jar`.
+The finished jar will be at `build/libs/ExplosionControl-1.1.0.jar`.
 
 > **Note on how this project was produced:** the code in this repository was written and
 > reviewed against the real Paper 1.21.11 API documentation (every non-trivial event class
