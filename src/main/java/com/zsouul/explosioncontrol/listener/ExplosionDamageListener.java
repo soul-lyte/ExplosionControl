@@ -15,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Enforces {@code damage-multiplier} for every {@link org.bukkit.entity.LivingEntity} hit by
@@ -33,12 +34,14 @@ public final class ExplosionDamageListener implements Listener {
     private final ConfigManager configManager;
     private final PendingKnockbackCache knockbackCache;
     private final ExplosionOriginRegistry originRegistry;
+    private final Logger logger;
 
     public ExplosionDamageListener(ConfigManager configManager, PendingKnockbackCache knockbackCache,
-                                    ExplosionOriginRegistry originRegistry) {
+                                    ExplosionOriginRegistry originRegistry, Logger logger) {
         this.configManager = configManager;
         this.knockbackCache = knockbackCache;
         this.originRegistry = originRegistry;
+        this.logger = logger;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -49,7 +52,8 @@ public final class ExplosionDamageListener implements Listener {
             return;
         }
 
-        ExplosionCategory category = resolveCategory(event);
+        boolean debug = configManager.isDebugEnabled();
+        ExplosionCategory category = resolveCategory(event, debug);
         ExplosionSettings settings = configManager.getSettings(category);
 
         if (!settings.enabled()) {
@@ -60,10 +64,18 @@ public final class ExplosionDamageListener implements Listener {
             return;
         }
 
+        double rawDamage = event.getDamage();
         double multiplier = settings.damageMultiplier();
         if (multiplier != 1.0D) {
-            double scaled = Math.max(0.0D, event.getDamage() * multiplier);
+            double scaled = Math.max(0.0D, rawDamage * multiplier);
             event.setDamage(scaled);
+        }
+
+        if (debug) {
+            logger.info(() -> String.format(
+                    "[debug] cause=%s category=%s multiplier=%.4f rawDamage=%.4f finalDamage=%.4f victim=%s",
+                    cause, category.key(), multiplier, rawDamage, event.getDamage(),
+                    event.getEntity().getUniqueId()));
         }
 
         // Hand the resolved settings off to the knockback listener for this same victim.
@@ -73,8 +85,14 @@ public final class ExplosionDamageListener implements Listener {
     /**
      * Resolves which explosion category caused this damage event, in three tiers:
      * <ol>
-     *   <li>{@link DamageSource#getCausingEntity()} (falling back to {@code getDirectEntity()})
-     *       — precise and cheap, covers the overwhelming majority of explosions.</li>
+     *   <li>{@link DamageSource#getDirectEntity()} (falling back to {@code getCausingEntity()})
+     *       — precise and cheap, covers the overwhelming majority of explosions. Direct is
+     *       checked first deliberately: {@code getCausingEntity()} reflects <em>attribution</em>
+     *       (e.g. the player who lit a TNT fuse gets credited for the kill) and can therefore be
+     *       a {@code Player} rather than the entity that actually exploded, which would never
+     *       match any category and silently fall through to {@link ExplosionCategory#OTHER}.
+     *       {@code getDirectEntity()} is the literal thing that caused the damage — the TNT,
+     *       the Creeper, the Wither Skull — which is what determines the category here.</li>
      *   <li>{@link ExplosionOriginRegistry} — covers the rare case where the exploding entity
      *       is already gone by the time the {@code DamageSource} is built (e.g. a TNT Minecart
      *       consuming itself), using the category recorded for that location a moment ago.</li>
@@ -84,28 +102,48 @@ public final class ExplosionDamageListener implements Listener {
      * </ol>
      * Only falls through to {@link ExplosionCategory#OTHER} if all three come up empty.
      */
-    private ExplosionCategory resolveCategory(EntityDamageEvent event) {
+    private ExplosionCategory resolveCategory(EntityDamageEvent event, boolean debug) {
         DamageSource source = event.getDamageSource();
 
-        Entity causingEntity = source.getCausingEntity();
-        if (causingEntity == null) {
-            causingEntity = source.getDirectEntity();
-        }
-        if (causingEntity != null) {
-            return ExplosionSourceResolver.resolve(causingEntity);
+        Entity directEntity = source.getDirectEntity();
+        Entity resolutionEntity = (directEntity != null) ? directEntity : source.getCausingEntity();
+
+        if (resolutionEntity != null) {
+            ExplosionCategory category = ExplosionSourceResolver.resolve(resolutionEntity);
+            if (debug) {
+                logger.info(() -> String.format(
+                        "[debug] resolved via entity: directEntity=%s causingEntity=%s -> used=%s -> category=%s",
+                        describe(source.getDirectEntity()), describe(source.getCausingEntity()),
+                        describe(resolutionEntity), category.key()));
+            }
+            return category;
         }
 
         Location damageLocation = source.getDamageLocation();
 
         Optional<ExplosionCategory> fromOrigin = originRegistry.lookup(damageLocation);
         if (fromOrigin.isPresent()) {
+            if (debug) {
+                logger.info(() -> "[debug] resolved via origin registry -> category=" + fromOrigin.get().key());
+            }
             return fromOrigin.get();
         }
 
         if (damageLocation != null && damageLocation.getWorld() != null) {
-            return ExplosionSourceResolver.resolveBlock(damageLocation.getBlock().getType());
+            ExplosionCategory category = ExplosionSourceResolver.resolveBlock(damageLocation.getBlock().getType());
+            if (debug) {
+                logger.info(() -> "[debug] resolved via block-at-location -> category=" + category.key());
+            }
+            return category;
         }
 
+        if (debug) {
+            logger.info("[debug] no entity, no origin-registry match, no usable location -> category=other");
+        }
         return ExplosionCategory.OTHER;
+    }
+
+    private static String describe(Entity entity) {
+        return (entity == null) ? "null" : entity.getType() + "(" + entity.getUniqueId() + ")";
     }
 }

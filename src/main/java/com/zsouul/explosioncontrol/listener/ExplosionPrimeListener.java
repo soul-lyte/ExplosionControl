@@ -10,6 +10,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 
+import java.util.logging.Logger;
+
 /**
  * Handles every entity-sourced explosion (TNT, TNT Minecart, Creeper, Charged Creeper,
  * Wither spawn, Wither Skull, Ghast Fireball, generic Fireball, Blaze Fireball, End Crystal,
@@ -29,16 +31,26 @@ public final class ExplosionPrimeListener implements Listener {
 
     private final ConfigManager configManager;
     private final ExplosionOriginRegistry originRegistry;
+    private final Logger logger;
 
-    public ExplosionPrimeListener(ConfigManager configManager, ExplosionOriginRegistry originRegistry) {
+    public ExplosionPrimeListener(ConfigManager configManager, ExplosionOriginRegistry originRegistry,
+                                   Logger logger) {
         this.configManager = configManager;
         this.originRegistry = originRegistry;
+        this.logger = logger;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onExplosionPrime(ExplosionPrimeEvent event) {
         ExplosionCategory category = ExplosionSourceResolver.resolve(event.getEntity());
         ExplosionSettings settings = configManager.getSettings(category);
+
+        boolean debug = configManager.isDebugEnabled();
+        if (debug) {
+            logger.info(() -> String.format("[debug] prime: entity=%s(%s) -> category=%s enabled=%s",
+                    event.getEntity().getType(), event.getEntity().getUniqueId(),
+                    category.key(), settings.enabled()));
+        }
 
         if (!settings.enabled()) {
             event.setCancelled(true);

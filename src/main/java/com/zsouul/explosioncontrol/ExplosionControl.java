@@ -70,7 +70,7 @@ public final class ExplosionControl extends JavaPlugin {
 
         // Entity-sourced explosions: TNT, TNT Minecart, Creeper, Charged Creeper, Wither spawn,
         // Wither Skull, Ghast Fireball, Fireball, Blaze Fireball, End Crystal, Wind Charge.
-        pluginManager.registerEvents(new ExplosionPrimeListener(configManager, originRegistry), this);
+        pluginManager.registerEvents(new ExplosionPrimeListener(configManager, originRegistry, getLogger()), this);
         pluginManager.registerEvents(new EntityExplodeListener(configManager, originRegistry), this);
 
         // Block-sourced explosions: Bed, Respawn Anchor.
@@ -79,7 +79,7 @@ public final class ExplosionControl extends JavaPlugin {
         pluginManager.registerEvents(new RespawnAnchorExplosionGuard(configManager), this);
 
         // Shared damage-multiplier / knockback-multiplier enforcement for every source above.
-        pluginManager.registerEvents(new ExplosionDamageListener(configManager, knockbackCache, originRegistry), this);
+        pluginManager.registerEvents(new ExplosionDamageListener(configManager, knockbackCache, originRegistry, getLogger()), this);
         pluginManager.registerEvents(new ExplosionKnockbackListener(knockbackCache), this);
 
         // Dragon Fireball: Paper API special case, handled entirely separately (see class docs).

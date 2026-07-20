@@ -26,6 +26,7 @@ public final class ConfigManager {
     private final JavaPlugin plugin;
     private final Logger logger;
     private final Map<ExplosionCategory, ExplosionSettings> settings = new EnumMap<>(ExplosionCategory.class);
+    private volatile boolean debugEnabled;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -40,7 +41,16 @@ public final class ConfigManager {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
 
+        this.debugEnabled = config.getBoolean("settings.debug", false);
+
         ConfigurationSection explosionsSection = config.getConfigurationSection("explosions");
+        if (explosionsSection == null) {
+            logger.warning("config.yml has no 'explosions:' section at all — this usually means "
+                    + "the file has a YAML syntax error and failed to parse. Every explosion "
+                    + "category will use vanilla defaults until this is fixed. Check the lines "
+                    + "above this warning for a YAML parsing error, or delete config.yml and "
+                    + "let the plugin regenerate a clean one.");
+        }
         Map<ExplosionCategory, ExplosionSettings> loaded = new EnumMap<>(ExplosionCategory.class);
 
         for (ExplosionCategory category : ExplosionCategory.values()) {
@@ -51,6 +61,19 @@ public final class ConfigManager {
 
         this.settings.clear();
         this.settings.putAll(loaded);
+
+        if (debugEnabled) {
+            logger.info(() -> "[debug] loaded settings: " + loaded);
+        }
+    }
+
+    /**
+     * @return whether {@code settings.debug} is enabled in {@code config.yml}; when true,
+     * listeners log the category/values they resolve for each explosion to help diagnose
+     * configuration or resolution issues.
+     */
+    public boolean isDebugEnabled() {
+        return debugEnabled;
     }
 
     /**

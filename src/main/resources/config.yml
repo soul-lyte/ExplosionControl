@@ -12,6 +12,14 @@
 # version so existing installs never need to delete config.yml to get new options.
 config-version: 1
 
+settings:
+  # When true, every explosion this plugin sees logs a line to console showing which
+  # category it resolved (and how - direct entity, fallback registry, or block check),
+  # the multiplier applied, and the raw/final damage. Useful for confirming your config
+  # is actually being read and matched the way you expect; noisy on a busy server, so
+  # leave this false unless you're actively diagnosing something.
+  debug: false
+
 # Every explosion source below shares the exact same five options:
 #
 #   enabled:               (true/false)
